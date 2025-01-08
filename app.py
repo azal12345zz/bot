@@ -638,6 +638,54 @@ def send_broadcast_message(message):
         except Exception as e:
             print(f"فشل الإرسال إلى {chat_id}: {e}")
     bot.send_message(message.chat.id, "✅ تم إرسال الرسالة إلى جميع المشتركين بنجاح.")
+@bot.message_handler(func=lambda message: message.text == 'حذف مستخدم مع جميع حساباته')
+def delete_user_all_accounts_start(message):
+    user_name = message.from_user.username
+    if not is_admin(user_name):
+        return bot.send_message(message.chat.id, "❌ أنت لست أدمن.")
+    
+    bot.send_message(message.chat.id, "📝 الرجاء إدخال اسم المستخدم الذي تريد حذفه مع حساباته:")
+    bot.register_next_step_handler(message, process_delete_user_all)
+
+def process_delete_user_all(message):
+    user_to_delete = message.text.strip()
+    # تحذف كل حساباته (استدعاء دالتك الحالية delete_allowed_accounts دون تمرير قائمة)
+    delete_allowed_accounts(user_to_delete)  
+    bot.send_message(message.chat.id, f"✅ تم حذف جميع الحسابات من المستخدم '{user_to_delete}' بنجاح.")
+    
+    # إذا أردت حذف وثيقة المستخدم كاملة من الـDB (users_coll)، أضف:
+    # users_coll.delete_one({"username": user_to_delete})
+    # bot.send_message(message.chat.id, f"✅ تم حذف المستخدم '{user_to_delete}' نهائيًا من قاعدة البيانات.")
+@bot.message_handler(func=lambda message: message.text == 'حذف جزء من حسابات المستخدم')
+def delete_part_of_user_accounts_start(message):
+    user_name = message.from_user.username
+    if not is_admin(user_name):
+        return bot.send_message(message.chat.id, "❌ أنت لست أدمن.")
+    
+    bot.send_message(message.chat.id, "📝 الرجاء إدخال اسم المستخدم:")
+    bot.register_next_step_handler(message, process_delete_part_step1)
+
+def process_delete_part_step1(message):
+    user_to_edit = message.text.strip()
+    current_accounts = get_allowed_accounts(user_to_edit)
+    
+    if not current_accounts:
+        bot.send_message(message.chat.id, f"❌ لا توجد حسابات للمستخدم '{user_to_edit}' أو المستخدم غير موجود.")
+        return  # إنهاء مبكرًا أو يمكنك إعادة الطلب
+    
+    # عرض الحسابات الحالية
+    bot.send_message(message.chat.id,
+                     f"✅ لدى المستخدم {user_to_edit} الحسابات التالية:\n"
+                     + "\n".join(current_accounts)
+                     + "\n📝 أرسل الحسابات التي تريد حذفها (حساب في كل سطر):")
+    # الانتقال إلى الخطوة التالية
+    bot.register_next_step_handler(message, process_delete_part_step2, user_to_edit)
+
+def process_delete_part_step2(message, user_to_edit):
+    accounts_to_delete = message.text.strip().split('\n')
+    # استدعاء الدالة التي ستحذف هذه الحسابات
+    delete_allowed_accounts(user_to_edit, accounts_to_delete)
+    bot.send_message(message.chat.id, f"✅ تم حذف الحسابات المطلوبة من المستخدم '{user_to_edit}' بنجاح.")
 
 # ----------------------------------
 # Webhook (إذا كنت ستستعمله)
