@@ -686,6 +686,37 @@ def process_delete_part_step2(message, user_to_edit):
     # استدعاء الدالة التي ستحذف هذه الحسابات
     delete_allowed_accounts(user_to_edit, accounts_to_delete)
     bot.send_message(message.chat.id, f"✅ تم حذف الحسابات المطلوبة من المستخدم '{user_to_edit}' بنجاح.")
+@bot.message_handler(func=lambda message: message.text == 'إضافة حسابات لمستخدم')
+def add_accounts_to_existing_user_start(message):
+    """
+    الخطوة الأولى: نسأل الأدمن عن اسم المستخدم
+    """
+    user_name = message.from_user.username
+    if not is_admin(user_name):
+        return bot.send_message(message.chat.id, "❌ أنت لست أدمن.")
+    
+    bot.send_message(message.chat.id, "📝 الرجاء إدخال اسم المستخدم:")
+    bot.register_next_step_handler(message, process_add_accounts_step1)
+
+def process_add_accounts_step1(message):
+    """
+    الخطوة الثانية: بعد إدخال اسم المستخدم، نسأله عن الحسابات التي يريد إضافتها
+    """
+    user_to_edit = message.text.strip()
+    create_user_if_not_exists(user_to_edit)
+    
+    bot.send_message(message.chat.id,
+                     f"أرسل الحسابات التي تريد إضافتها للمستخدم {user_to_edit} (حساب في كل سطر):")
+    bot.register_next_step_handler(message, process_add_accounts_step2, user_to_edit)
+
+def process_add_accounts_step2(message, user_to_edit):
+    """
+    الخطوة الثالثة: نأخذ الحسابات المدخلة ونضيفها للمستخدم في DB
+    """
+    accounts_to_add = message.text.strip().split('\n')
+    for acc in accounts_to_add:
+        add_allowed_user_account(user_to_edit, acc.strip())
+    bot.send_message(message.chat.id, f"✅ تم إضافة الحسابات للمستخدم {user_to_edit} بنجاح.")
 
 # ----------------------------------
 # Webhook (إذا كنت ستستعمله)
