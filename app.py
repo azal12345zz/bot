@@ -192,7 +192,7 @@ bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
 EMAIL = "azal12345zz@gmail.com"
-PASSWORD = "pbnr pihp anhm vlxp"
+PASSWORD = "4ghf tnlv yxoo lwkh aq5t 4tyv 33h2 7ba5"
 IMAP_SERVER = "imap.gmail.com"
 
 # قاموس مؤقت في الذاكرة لتخزين الحساب المحدد لكل مستخدم
